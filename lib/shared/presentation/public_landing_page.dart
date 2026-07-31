@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
-/// Temporary public landing page. The real QR-scan entry flow (scanner,
-/// fetch product, launch viewer) is built in a later phase.
+/// Public landing page — the entry point for anyone opening the app
+/// without a specific product link. The real QR-scan entry flow.
 class PublicLandingPage extends StatelessWidget {
   const PublicLandingPage({super.key});
 
@@ -21,6 +22,12 @@ class PublicLandingPage extends StatelessWidget {
             Text(
               'Scan a QR code to view a product in AR',
               style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 24),
+            FilledButton.icon(
+              onPressed: () => context.go('/scan'),
+              icon: const Icon(Icons.qr_code_scanner),
+              label: const Text('Scan QR Code'),
             ),
           ],
         ),

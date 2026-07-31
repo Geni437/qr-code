@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
-import 'package:qr_ar_platform/core/utilities/failure.dart';
 import 'package:qr_ar_platform/core/utilities/result.dart';
 import 'package:qr_ar_platform/features/categories/domain/entities/category.dart';
 import 'package:qr_ar_platform/features/categories/domain/repositories/category_repository.dart';

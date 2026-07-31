@@ -11,13 +11,14 @@ import '../../../categories/domain/entities/category.dart';
 import '../../../categories/presentation/controllers/category_providers.dart';
 import '../../../media/presentation/widgets/media_upload_section.dart';
 import '../../../models/presentation/widgets/model_upload_section.dart';
+import '../../../qr_codes/presentation/widgets/qr_code_section.dart';
 import '../../domain/entities/product.dart';
 import '../controllers/product_providers.dart';
 import '../widgets/product_image_picker.dart';
 
 /// Create/edit form for a product. `productId` is null when creating; the
-/// 3D Models and Media tabs stay locked until the product has an id, since
-/// both need a `product_id` foreign key to attach files to.
+/// 3D Models, Media, and QR Code tabs stay locked until the product has an
+/// id, since all three need a `product_id` (the QR encodes it directly).
 class ProductFormPage extends ConsumerStatefulWidget {
   const ProductFormPage({super.key, this.productId});
 
@@ -339,7 +340,7 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
 
   Widget _buildScaffoldBody(List<Category> categories) {
     return DefaultTabController(
-      length: 3,
+      length: 4,
       child: Scaffold(
         appBar: AppBar(
           title: Text(_isEditing ? 'Edit Product' : 'New Product'),
@@ -349,6 +350,7 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
               Tab(text: 'Details'),
               Tab(text: '3D Models'),
               Tab(text: 'Media'),
+              Tab(text: 'QR Code'),
             ],
           ),
         ),
@@ -367,6 +369,17 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
                     child: MediaUploadSection(productId: _productId!),
                   )
                 : _lockedTab('Save the product details first to add media.'),
+            _productId != null
+                ? Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: QrCodeSection(
+                      productId: _productId!,
+                      productName: _nameController.text.trim().isEmpty
+                          ? 'product'
+                          : _nameController.text.trim(),
+                    ),
+                  )
+                : _lockedTab('Save the product details first to generate a QR code.'),
           ],
         ),
       ),

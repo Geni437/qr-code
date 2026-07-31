@@ -9,7 +9,8 @@ import '../../features/categories/presentation/pages/category_list_page.dart';
 import '../../features/dashboard/presentation/dashboard_page.dart';
 import '../../features/products/presentation/pages/product_form_page.dart';
 import '../../features/products/presentation/pages/product_list_page.dart';
-import '../../shared/presentation/product_view_placeholder_page.dart';
+import '../../features/products/presentation/pages/public_product_page.dart';
+import '../../features/scanner/presentation/pages/scanner_page.dart';
 import '../../shared/presentation/public_landing_page.dart';
 import '../widgets/admin_shell.dart';
 import 'go_router_refresh_stream.dart';
@@ -40,9 +41,10 @@ final routerProvider = Provider<GoRouter>((ref) {
     },
     routes: [
       GoRoute(path: '/', builder: (context, state) => const PublicLandingPage()),
+      GoRoute(path: '/scan', builder: (context, state) => const ScannerPage()),
       GoRoute(
         path: '/view/:productId',
-        builder: (context, state) => ProductViewPlaceholderPage(
+        builder: (context, state) => PublicProductPage(
           productId: state.pathParameters['productId']!,
         ),
       ),

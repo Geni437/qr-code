@@ -11,17 +11,20 @@ installed: `supabase init && supabase start`).
 
 ## 2. Run the schema
 
-Open the SQL Editor in your Supabase project's dashboard and run the
-contents of [`supabase/migrations/0001_init_schema.sql`](supabase/migrations/0001_init_schema.sql)
-(or, once you have the CLI installed and linked: `supabase db push`).
+Open the SQL Editor in your Supabase project's dashboard and run each file
+under [`supabase/migrations/`](supabase/migrations/) in order (or, once you
+have the CLI installed and linked: `supabase db push`):
 
-This creates all Phase 1 tables (`profiles`, `roles`, `products`,
-`categories`, `models`, `hotspots`, `media`, `analytics`, `scans`,
-`reports`, `settings`, `logs`, `notifications`), seeds the two roles
-(`super_admin`, `administrator`), and enables Row Level Security everywhere:
-public (anonymous) callers get read-only access to published content and can
-insert scan/analytics events; everything else requires an authenticated
-admin.
+- `0001_init_schema.sql` — all tables (`profiles`, `roles`, `products`,
+  `categories`, `models`, `hotspots`, `media`, `analytics`, `scans`,
+  `reports`, `settings`, `logs`, `notifications`), the two seeded roles
+  (`super_admin`, `administrator`), and RLS everywhere: public (anonymous)
+  callers get read-only access to published content and can insert
+  scan/analytics events; everything else requires an authenticated admin
+- `0002_storage_setup.sql` — creates the 7 storage buckets and admin-only
+  policies on them
+- `0003_public_asset_read.sql` — adds public read access to a published
+  product's thumbnail/cover images, for the public product page
 
 ## 3. Create your first admin user
 
@@ -36,28 +39,30 @@ your first user:
 To promote someone to `super_admin`, update their `profiles.role_id` to
 point at the `super_admin` row in `roles`.
 
-## 4. Create storage buckets
+## 4. Storage buckets
 
-Create these buckets under Storage (names must match
-`lib/core/constants/app_constants.dart`): `models`, `images`, `videos`,
-`documents`, `audio`, `thumbnails`, `qr_codes`. Storage policies aren't
-scripted yet — that lands with the Model/Media upload feature in a later
-phase.
+Already created by `0002_storage_setup.sql` above — no manual step needed.
 
 ## 5. Configure the app
 
 Edit the `.env` file at the project root (already present with placeholder
-values, and already tracked so the app runs out of the box) with your
-project's URL and anon key, both found under **Settings → API**:
+values, and already tracked so the app runs out of the box):
 
 ```
 SUPABASE_URL=https://your-project-ref.supabase.co
 SUPABASE_ANON_KEY=your-anon-public-key
+PUBLIC_BASE_URL=https://your-domain.example.com
 ```
 
-The anon key is safe to ship client-side — it's constrained entirely by the
-RLS policies above. Never put a service-role key in this file or anywhere in
-the Flutter app.
+`SUPABASE_URL`/`SUPABASE_ANON_KEY` are under **Settings → API**. The anon
+key is safe to ship client-side — it's constrained entirely by the RLS
+policies above. Never put a service-role key in this file or anywhere in the
+Flutter app.
+
+`PUBLIC_BASE_URL` is encoded into every generated QR code
+(`{PUBLIC_BASE_URL}/view/{productId}`). It stays a placeholder until you set
+it — update it to your real deployed URL before printing QR codes for
+actual products, otherwise scanned codes won't resolve anywhere.
 
 ## 6. Run the app
 
