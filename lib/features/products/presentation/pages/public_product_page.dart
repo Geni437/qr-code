@@ -1,3 +1,6 @@
+import 'dart:typed_data';
+
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -13,13 +16,16 @@ import '../../../viewer/data/hotspot_media_resolver.dart';
 import '../../../viewer/presentation/widgets/model_3d_viewer.dart';
 import '../../../viewer/presentation/widgets/model_3d_viewer_controller.dart';
 import '../../../viewer/presentation/widgets/model_3d_viewer_controls.dart';
+import '../../data/product_cache.dart';
 import '../../domain/entities/product.dart';
 import '../controllers/product_providers.dart';
 
 /// Public, no-login product page reached by scanning a QR code (or opening
 /// a `/view/:productId` link directly). Records one scan event on
 /// successful load — that single moment covers both entry paths without
-/// double-counting.
+/// double-counting. Also a stale-while-revalidate cache: a previously
+/// viewed product renders instantly from the local cache while a fresh
+/// fetch runs underneath, rather than a blank spinner every time.
 class PublicProductPage extends ConsumerStatefulWidget {
   const PublicProductPage({super.key, required this.productId});
 
@@ -30,15 +36,24 @@ class PublicProductPage extends ConsumerStatefulWidget {
 }
 
 class _PublicProductPageState extends ConsumerState<PublicProductPage> {
+  Product? _cachedProduct;
+
   @override
   void initState() {
     super.initState();
+    _loadCache();
     _recordScanOnceLoaded();
+  }
+
+  Future<void> _loadCache() async {
+    final cached = await ProductCache.read(widget.productId);
+    if (mounted && cached != null) setState(() => _cachedProduct = cached);
   }
 
   Future<void> _recordScanOnceLoaded() async {
     try {
-      await ref.read(productByIdProvider(widget.productId).future);
+      final product = await ref.read(productByIdProvider(widget.productId).future);
+      await ProductCache.write(product);
       await ref.read(scanRepositoryProvider).recordScan(productId: widget.productId);
     } catch (_) {
       // Product not found/not published (or the insert itself failed) —
@@ -53,8 +68,10 @@ class _PublicProductPageState extends ConsumerState<PublicProductPage> {
     return Scaffold(
       appBar: AppBar(title: const Text('Product')),
       body: productAsync.when(
-        loading: () => const LoadingView(),
-        error: (error, _) => const _NotAvailable(),
+        loading: () =>
+            _cachedProduct != null ? _ProductDetails(product: _cachedProduct!) : const LoadingView(),
+        error: (error, _) =>
+            _cachedProduct != null ? _ProductDetails(product: _cachedProduct!) : const _NotAvailable(),
         data: (product) => _ProductDetails(product: product),
       ),
     );
@@ -208,13 +225,32 @@ class _Product3DViewerSectionState extends ConsumerState<_Product3DViewerSection
     }
 
     if (!mounted) return;
+    final signedUrl = urlResult.match((_) => null, (url) => url);
     setState(() {
-      _signedUrl = urlResult.match((_) => null, (url) => url);
+      _signedUrl = signedUrl;
       _iosSrc = iosSrc;
       _hotspots = hotspots;
       _mediaByHotspot = mediaByHotspot;
       _loading = false;
     });
+
+    if (signedUrl != null) {
+      ref
+          .read(analyticsRepositoryProvider)
+          .recordEvent(productId: widget.productId, eventType: 'viewer_open');
+    }
+  }
+
+  Future<void> _handleScreenshot(Uint8List bytes) async {
+    await FilePicker.saveFile(
+      fileName: 'screenshot.png',
+      bytes: bytes,
+      type: FileType.custom,
+      allowedExtensions: const ['png'],
+    );
+    ref
+        .read(analyticsRepositoryProvider)
+        .recordEvent(productId: widget.productId, eventType: 'screenshot');
   }
 
   @override
@@ -249,10 +285,12 @@ class _Product3DViewerSectionState extends ConsumerState<_Product3DViewerSection
             hotspotRelatedCss: html.relatedCss,
             arEnabled: true,
             iosSrc: _iosSrc,
+            trackAnalytics: true,
+            productId: widget.productId,
           ),
         ),
         const SizedBox(height: 12),
-        Model3DViewerControls(controller: _controller),
+        Model3DViewerControls(controller: _controller, onScreenshot: _handleScreenshot),
       ],
     );
   }

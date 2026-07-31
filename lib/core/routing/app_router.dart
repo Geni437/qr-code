@@ -1,15 +1,18 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/analytics/presentation/pages/analytics_page.dart';
 import '../../features/authentication/presentation/controllers/auth_providers.dart';
 import '../../features/authentication/presentation/pages/forgot_password_page.dart';
 import '../../features/authentication/presentation/pages/login_page.dart';
 import '../../features/categories/presentation/pages/category_form_page.dart';
 import '../../features/categories/presentation/pages/category_list_page.dart';
 import '../../features/dashboard/presentation/dashboard_page.dart';
+import '../../features/notifications/presentation/pages/notifications_page.dart';
 import '../../features/products/presentation/pages/product_form_page.dart';
 import '../../features/products/presentation/pages/product_list_page.dart';
 import '../../features/products/presentation/pages/public_product_page.dart';
+import '../../features/reports/presentation/pages/reports_page.dart';
 import '../../features/scanner/presentation/pages/scanner_page.dart';
 import '../../shared/presentation/public_landing_page.dart';
 import '../widgets/admin_shell.dart';
@@ -88,6 +91,18 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/admin/categories/:id/edit',
             builder: (context, state) =>
                 CategoryFormPage(categoryId: state.pathParameters['id']!),
+          ),
+          GoRoute(
+            path: '/admin/analytics',
+            builder: (context, state) => const AnalyticsPage(),
+          ),
+          GoRoute(
+            path: '/admin/reports',
+            builder: (context, state) => const ReportsPage(),
+          ),
+          GoRoute(
+            path: '/admin/notifications',
+            builder: (context, state) => const NotificationsPage(),
           ),
         ],
       ),

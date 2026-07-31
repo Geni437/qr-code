@@ -17,10 +17,12 @@ String _mediaHtml(ResolvedMedia media) {
   return switch (media.type) {
     'image' => '<img src="$url" style="max-width:100%;border-radius:8px;margin-top:8px;">',
     'video' =>
-      '<video src="$url" controls style="max-width:100%;border-radius:8px;margin-top:8px;"></video>',
+      '<video src="$url" controls onplay="appTrackEventIfAvailable(\'video_play\')" '
+          'style="max-width:100%;border-radius:8px;margin-top:8px;"></video>',
     'audio' => '<audio src="$url" controls style="width:100%;margin-top:8px;"></audio>',
     _ =>
-      '<a href="$url" target="_blank" rel="noopener" style="display:block;margin-top:8px;">Open attachment</a>',
+      '<a href="$url" target="_blank" rel="noopener" onclick="appTrackEventIfAvailable(\'download\')" '
+          'style="display:block;margin-top:8px;">Open attachment</a>',
   };
 }
 
@@ -42,7 +44,9 @@ String _mediaHtml(ResolvedMedia media) {
     final id = hotspot.id;
     markers.writeln(
       '<button slot="hotspot-$id" data-position="${hotspot.positionX} ${hotspot.positionY} ${hotspot.positionZ}" '
-      'data-normal="0 1 0" class="app-hotspot-marker" onclick="appShowHotspot(\'$id\')"></button>',
+      'data-normal="0 1 0" class="app-hotspot-marker" '
+      'onclick="appShowHotspot(\'$id\'); appTrackEventIfAvailable(\'hotspot_click\', {hotspot_id: \'$id\'})">'
+      '</button>',
     );
 
     final media = mediaByHotspotId[id];
@@ -63,6 +67,13 @@ String _mediaHtml(ResolvedMedia media) {
   }
 
   const relatedJs = '''
+function appTrackEventIfAvailable(eventType, metadata) {
+  // appTrackEvent only exists on the public page (see
+  // analytics_tracking_js_builder.dart) — the admin preview page renders
+  // these same hotspot panels without it, so calls here must be a no-op
+  // rather than a ReferenceError.
+  if (typeof appTrackEvent === 'function') appTrackEvent(eventType, metadata);
+}
 function appShowHotspot(id) {
   document.querySelectorAll('.app-hotspot-panel').forEach(function (el) { el.style.display = 'none'; });
   var el = document.getElementById('app-hotspot-panel-' + id);

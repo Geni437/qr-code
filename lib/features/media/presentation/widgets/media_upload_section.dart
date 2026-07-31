@@ -2,8 +2,12 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/utilities/image_compression.dart';
+import '../../../notifications/presentation/controllers/notification_providers.dart';
 import '../../domain/entities/media_asset.dart';
 import '../controllers/media_providers.dart';
+
+const _imageExtensions = {'jpg', 'jpeg', 'png', 'gif', 'webp'};
 
 IconData _iconForType(String type) => switch (type) {
   'image' => Icons.image_outlined,
@@ -54,20 +58,29 @@ class _MediaUploadSectionState extends ConsumerState<MediaUploadSection> {
     if (file?.bytes == null) return;
 
     setState(() => _uploading = true);
+    final isImage = _imageExtensions.contains((file!.extension ?? '').toLowerCase());
+    final bytes = isImage ? compressImageIfNeeded(file.bytes!) : file.bytes!;
     final result = await ref
         .read(mediaRepositoryProvider)
         .upload(
           productId: widget.productId,
-          fileName: file!.name,
-          bytes: file.bytes!,
+          fileName: file.name,
+          bytes: bytes,
           extension: file.extension,
         );
     if (!mounted) return;
     setState(() => _uploading = false);
     result.match(
-      (failure) => ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(failure.message))),
+      (failure) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(failure.message)));
+        ref
+            .read(notificationRepositoryProvider)
+            .create(
+              type: 'failed_upload',
+              title: 'Media upload failed',
+              message: failure.message,
+            );
+      },
       (_) => _load(),
     );
   }

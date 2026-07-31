@@ -12,6 +12,10 @@ class AppConstants {
   static const String audioBucket = 'audio';
   static const String thumbnailsBucket = 'thumbnails';
   static const String qrCodesBucket = 'qr_codes';
+
+  /// Placeholder warning threshold for the `storage_limit` notification —
+  /// Supabase's free tier is ~1GB; adjust to your actual plan's limit.
+  static const int storageWarningThresholdBytes = 800 * 1024 * 1024;
 }
 
 /// Table names, kept in one place so repositories never hardcode strings.

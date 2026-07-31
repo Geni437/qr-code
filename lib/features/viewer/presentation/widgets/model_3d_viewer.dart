@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:model_viewer_plus/model_viewer_plus.dart';
 
+import '../../../../core/config/supabase_config.dart';
+import '../../data/analytics_tracking_js_builder.dart';
 import 'model_3d_viewer_controller.dart';
 
 typedef PlacementCallback = void Function(double x, double y, double z);
@@ -28,6 +30,8 @@ class Model3DViewer extends StatelessWidget {
     this.onPlacement,
     this.arEnabled = false,
     this.iosSrc,
+    this.trackAnalytics = false,
+    this.productId,
   });
 
   final String src;
@@ -50,6 +54,13 @@ class Model3DViewer extends StatelessWidget {
   /// gracefully, not as an error.
   final String? iosSrc;
 
+  /// Whether to inject the analytics-tracking JS (see
+  /// `analytics_tracking_js_builder.dart`). Opt-in and off by default so the
+  /// admin model-preview page doesn't pollute real product analytics —
+  /// only the public product page sets this. Requires [productId].
+  final bool trackAnalytics;
+  final String? productId;
+
   static const _placementJs = '''
 (function () {
   var mv = document.querySelector('model-viewer');
@@ -68,7 +79,19 @@ class Model3DViewer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final relatedJs = placementEnabled ? '$hotspotRelatedJs\n$_placementJs' : hotspotRelatedJs;
+    final trackingJs = trackAnalytics && productId != null
+        ? buildAnalyticsTrackingJs(
+            supabaseUrl: SupabaseConfig.url,
+            supabaseAnonKey: SupabaseConfig.anonKey,
+            productId: productId!,
+            includeArStatusListener: arEnabled,
+          )
+        : '';
+    final relatedJs = [
+      hotspotRelatedJs,
+      trackingJs,
+      if (placementEnabled) _placementJs,
+    ].join('\n');
 
     // model_viewer_plus builds its page once in initState and never reacts
     // to prop changes (see Model3DViewerController's doc comment) — so any

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../notifications/presentation/controllers/notification_providers.dart';
 import '../../../viewer/presentation/pages/model_preview_page.dart';
 import '../../domain/entities/model_asset.dart';
 import '../controllers/model_providers.dart';
@@ -64,10 +65,26 @@ class _ModelUploadSectionState extends ConsumerState<ModelUploadSection> {
     if (!mounted) return;
     setState(() => _uploading = false);
     result.match(
-      (failure) => ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(failure.message))),
-      (_) => _load(),
+      (failure) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(failure.message)));
+        ref
+            .read(notificationRepositoryProvider)
+            .create(
+              type: 'failed_upload',
+              title: '3D model upload failed',
+              message: failure.message,
+            );
+      },
+      (model) {
+        _load();
+        ref
+            .read(notificationRepositoryProvider)
+            .create(
+              type: 'new_model',
+              title: 'New 3D model uploaded',
+              message: '${model.format.toUpperCase()} model added to a product.',
+            );
+      },
     );
   }
 

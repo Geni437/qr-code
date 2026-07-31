@@ -70,6 +70,35 @@ class DashboardRepositoryImpl implements DashboardRepository {
     }
   }
 
+  /// Fire-and-forget: inserts a `storage_limit`/`system_error` notification
+  /// when warranted, skipping the insert if an unread one of that type was
+  /// already created in the last 24h (checked directly against the
+  /// `notifications` table via the same client — this repository doesn't
+  /// depend on `NotificationRepository`, it's simpler to reuse the
+  /// connection it already has to write one more table).
+  Future<void> _maybeNotify({required String type, required String title, required String message}) async {
+    try {
+      final cutoff = DateTime.now().subtract(const Duration(hours: 24));
+      final existing = await _client
+          .from(SupabaseTables.notifications)
+          .select('id')
+          .eq('type', type)
+          .eq('is_read', false)
+          .gte('created_at', cutoff.toIso8601String())
+          .limit(1);
+      if ((existing as List).isNotEmpty) return;
+
+      await _client.from(SupabaseTables.notifications).insert({
+        'type': type,
+        'title': title,
+        'message': message,
+      });
+    } catch (_) {
+      // Best-effort — a failed notification insert shouldn't break the
+      // dashboard itself.
+    }
+  }
+
   @override
   Future<Result<DashboardStats>> getStats() async {
     try {
@@ -93,6 +122,23 @@ class DashboardRepositoryImpl implements DashboardRepository {
       final totalModels = results[3];
       final totalScans = results[4];
       final storageUsageBytes = results[5] + results[6];
+
+      if (storageUsageBytes > AppConstants.storageWarningThresholdBytes) {
+        _maybeNotify(
+          type: 'storage_limit',
+          title: 'Storage usage is high',
+          message:
+              '${(storageUsageBytes / (1024 * 1024)).toStringAsFixed(0)} MB used — '
+              'consider archiving unused models/media.',
+        );
+      }
+      if (!isHealthy) {
+        _maybeNotify(
+          type: 'system_error',
+          title: 'System health check failed',
+          message: 'A routine database check failed — see the dashboard health badge.',
+        );
+      }
 
       return Right(
         DashboardStats(

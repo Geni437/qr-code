@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/services/supabase_service.dart';
+import '../../../../core/utilities/image_compression.dart';
 
 /// Single-image picker for a product's thumbnail/cover image: uploads
 /// straight to the given (private) bucket under `{productId}/...` and
@@ -72,11 +73,12 @@ class _ProductImagePickerState extends ConsumerState<ProductImagePicker> {
     setState(() => _uploading = true);
     try {
       final path = '${widget.productId}/${DateTime.now().microsecondsSinceEpoch}_${file!.name}';
+      final bytes = compressImageIfNeeded(file.bytes!);
       await ref
           .read(supabaseClientProvider)
           .storage
           .from(widget.bucket)
-          .uploadBinary(path, file.bytes!);
+          .uploadBinary(path, bytes);
       widget.onUploaded(path);
     } catch (e) {
       if (mounted) {
