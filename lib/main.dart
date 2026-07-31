@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'core/config/supabase_config.dart';
 import 'core/constants/app_constants.dart';
 import 'core/routing/app_router.dart';
 import 'core/services/supabase_service.dart';
@@ -9,7 +10,13 @@ import 'core/themes/app_theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await dotenv.load(fileName: '.env', isOptional: true);
+  // Skip the .env HTTP fetch entirely when --dart-define config was
+  // provided at build time — some production web hosts 403 any request
+  // for a dotfile, so there's no reason to attempt (and log an error for)
+  // a fetch nothing actually needs. See SupabaseConfig's doc comment.
+  if (!SupabaseConfig.hasCompileTimeConfig) {
+    await dotenv.load(fileName: '.env', isOptional: true);
+  }
   await initSupabase();
   runApp(const ProviderScope(child: QrArApp()));
 }

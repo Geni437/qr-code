@@ -14,12 +14,28 @@ actually reach on desktop, per the platform-limitation notes in
 `ARCHITECTURE.md`/the scanner and viewer code.
 
 ```
-flutter build web --release --base-href /qr-code/
+flutter build web --release --base-href /qr-code/ \
+  --dart-define=SUPABASE_URL=https://your-project-ref.supabase.co \
+  --dart-define=SUPABASE_ANON_KEY=your-anon-public-key \
+  --dart-define=PUBLIC_BASE_URL=https://your-domain.com/qr-code
 ```
 
+**Use `--dart-define`, not just `.env`, for web production builds.**
+Discovered on this project's own deployment: `SupabaseConfig`/`AppConfig`
+normally read `.env` at runtime via an HTTP fetch of `assets/.env` — fine
+for local dev, but plenty of production web hosts (including this one)
+block any request for a dotfile as a default security measure, so the
+fetch 403s and the app silently falls back to placeholder config, unable
+to reach Supabase at all. `--dart-define` values get compiled straight
+into `main.dart.js` at build time instead, so there's no runtime file
+fetch to block. This is safe to do with these three values specifically —
+the anon key is meant to be public, constrained by RLS, not secrecy — and
+`main.dart` skips the `.env` fetch entirely when dart-define config is
+present, so there's nothing left to 403 in the browser console either.
+
 **The `--base-href` flag matters and must match `PUBLIC_BASE_URL`.**
-`.env`'s `PUBLIC_BASE_URL` is currently `https://itclingua.info/qr-code` —
-a *subpath*, not the domain root. If you build without `--base-href
+This project's `PUBLIC_BASE_URL` is `https://itclingua.info/qr-code` — a
+*subpath*, not the domain root. If you build without `--base-href
 /qr-code/` (or serve `build/web/` from anywhere other than exactly that
 subpath), the app's own asset references and routes will resolve against
 the wrong base and it won't load correctly. If you ever change
@@ -46,9 +62,16 @@ else in `web/` (favicon, manifest.json) gets copied, `.htaccess` doesn't.
 So after every `flutter build web`, copy it in by hand before uploading:
 
 ```
-flutter build web --release --base-href /qr-code/
+flutter build web --release --base-href /qr-code/ \
+  --dart-define=SUPABASE_URL=https://tdfwswupbbovnourwfyg.supabase.co \
+  --dart-define=SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRkZndzd3VwYmJvdm5vdXJ3ZnlnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU0NTc1NDUsImV4cCI6MjEwMTAzMzU0NX0.tZ0kcyuAW2wYUyQXmh9vO_k8hMusuB2dTFOVhfMm4B8 \
+  --dart-define=PUBLIC_BASE_URL=https://itclingua.info/qr-code
 cp web/.htaccess build/web/.htaccess
 ```
+
+(The anon key above is this project's real one — safe to have in this doc
+for the same reason it's safe in `.env`: it's public by design, gated by
+RLS. Never do this with a service-role key.)
 
 Then upload **the contents of `build/web/`** (not the `build/web` folder
 itself — the files need to land directly in the `/qr-code` directory on

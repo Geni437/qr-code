@@ -2,17 +2,22 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 /// General app-level config (non-Supabase). See [SupabaseConfig] for the
-/// same pattern applied to Supabase credentials.
+/// same compile-time-vs-runtime-config pattern and why it exists.
 class AppConfig {
   const AppConfig._();
 
   static const _placeholderBaseUrl = 'https://your-domain.example.com';
+  static const _defineBaseUrl = String.fromEnvironment('PUBLIC_BASE_URL');
 
   /// The base URL encoded into generated QR codes, e.g.
-  /// `$publicBaseUrl/view/{productId}`. There's no deployed web build yet,
-  /// so this defaults to an obvious placeholder rather than guessing at
-  /// `Uri.base` (which would bake `localhost` into a QR meant for print).
+  /// `$publicBaseUrl/view/{productId}`. Prefers a `--dart-define` value
+  /// (baked in at build time) over `.env` for the same reason as
+  /// [SupabaseConfig] — production web builds should pass
+  /// `--dart-define=PUBLIC_BASE_URL=...` rather than rely on `.env` being
+  /// fetchable at runtime.
   static String get publicBaseUrl {
+    if (_defineBaseUrl.isNotEmpty) return _defineBaseUrl;
+
     final value = dotenv.env['PUBLIC_BASE_URL'];
     if (value == null || value.isEmpty) {
       debugPrint(
