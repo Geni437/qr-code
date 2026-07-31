@@ -1,0 +1,21 @@
+# SPA fallback for Apache/cPanel-style hosting: serves index.html for any
+# request that isn't a real file on disk, so client-side routes
+# (/qr-code/view/:productId, /qr-code/admin/*) work on a direct link or a
+# page refresh, not just when navigated to from within the running app.
+#
+# IMPORTANT: `flutter build web` does NOT copy dotfiles from web/ into
+# build/web/ (confirmed by testing — favicon.png/manifest.json get copied,
+# .htaccess doesn't). This file has to be added to build/web/ (or straight
+# into the upload) by hand after every build; it will not appear there on
+# its own. Kept here in source control as the maintained copy to grab.
+#
+# If you ever move the deployment off the /qr-code/ subpath, update
+# RewriteBase to match (and PUBLIC_BASE_URL in .env, and the --base-href
+# flag used to build).
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /qr-code/
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^ index.html [L]
+</IfModule>

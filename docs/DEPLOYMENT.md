@@ -33,6 +33,33 @@ serve `index.html` for unknown paths (SPA fallback routing), since
 `/view/:productId` and `/admin/*` are client-side routes handled by
 `go_router`, not real server paths.
 
+### This project's actual target: `itclingua.info/qr-code`
+
+That's Apache/cPanel-style hosting (a domain with a subpath, the classic
+shared-hosting shape), so SPA fallback means an `.htaccess` rewrite rule.
+`web/.htaccess` in this repo has one already written, scoped to the
+`/qr-code/` subpath.
+
+**Important, confirmed by testing**: `flutter build web` does **not** copy
+dotfiles (like `.htaccess`) from `web/` into `build/web/` — everything
+else in `web/` (favicon, manifest.json) gets copied, `.htaccess` doesn't.
+So after every `flutter build web`, copy it in by hand before uploading:
+
+```
+flutter build web --release --base-href /qr-code/
+cp web/.htaccess build/web/.htaccess
+```
+
+Then upload **the contents of `build/web/`** (not the `build/web` folder
+itself — the files need to land directly in the `/qr-code` directory on
+the host) via cPanel File Manager or an FTP client. Confirm afterward that
+`https://itclingua.info/qr-code/.htaccess` is *not* publicly downloadable
+(most Apache configs block serving `.htaccess` itself by default — worth
+a quick check, not an assumption) and that opening
+`https://itclingua.info/qr-code/view/some-id` directly (not just
+navigating there from within the app) actually loads instead of 404ing —
+that's the concrete sign the rewrite rule is working.
+
 ## Android
 
 1. Generate a release keystore (if you don't have one):
