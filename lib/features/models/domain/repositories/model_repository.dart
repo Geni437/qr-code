@@ -21,4 +21,12 @@ abstract class ModelRepository {
   Future<Result<Unit>> delete(ModelAsset model);
 
   Future<Result<String>> getSignedUrl(String filePath);
+
+  /// Uploads an optional USDZ variant of [model] for iOS Quick Look AR and
+  /// records its path on the model's row.
+  Future<Result<ModelAsset>> attachUsdz({
+    required ModelAsset model,
+    required String fileName,
+    required Uint8List bytes,
+  });
 }

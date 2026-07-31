@@ -23,6 +23,7 @@ class _ModelUploadSectionState extends ConsumerState<ModelUploadSection> {
   List<ModelAsset>? _models;
   bool _uploading = false;
   String? _error;
+  final Set<String> _uploadingUsdzIds = {};
 
   @override
   void initState() {
@@ -62,6 +63,29 @@ class _ModelUploadSectionState extends ConsumerState<ModelUploadSection> {
         );
     if (!mounted) return;
     setState(() => _uploading = false);
+    result.match(
+      (failure) => ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(failure.message))),
+      (_) => _load(),
+    );
+  }
+
+  Future<void> _pickAndUploadUsdz(ModelAsset model) async {
+    final picked = await FilePicker.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: const ['usdz'],
+      withData: true,
+    );
+    final file = picked?.files.single;
+    if (file?.bytes == null) return;
+
+    setState(() => _uploadingUsdzIds.add(model.id));
+    final result = await ref
+        .read(modelRepositoryProvider)
+        .attachUsdz(model: model, fileName: file!.name, bytes: file.bytes!);
+    if (!mounted) return;
+    setState(() => _uploadingUsdzIds.remove(model.id));
     result.match(
       (failure) => ScaffoldMessenger.of(
         context,
@@ -127,11 +151,31 @@ class _ModelUploadSectionState extends ConsumerState<ModelUploadSection> {
                 title: Text(model.filePath.split('/').last),
                 subtitle: Text(
                   '${model.format.toUpperCase()} · v${model.version}'
-                  '${model.fileSizeBytes != null ? ' · ${(model.fileSizeBytes! / 1024).toStringAsFixed(1)} KB' : ''}',
+                  '${model.fileSizeBytes != null ? ' · ${(model.fileSizeBytes! / 1024).toStringAsFixed(1)} KB' : ''}'
+                  '${model.usdzFilePath != null ? ' · USDZ attached (iOS AR)' : ''}',
                 ),
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    IconButton(
+                      icon: _uploadingUsdzIds.contains(model.id)
+                          ? const SizedBox(
+                              height: 16,
+                              width: 16,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : Icon(
+                              model.usdzFilePath != null
+                                  ? Icons.phone_iphone
+                                  : Icons.add_to_home_screen_outlined,
+                            ),
+                      tooltip: model.usdzFilePath != null
+                          ? 'Replace USDZ (iOS AR)'
+                          : 'Add USDZ (iOS AR)',
+                      onPressed: _uploadingUsdzIds.contains(model.id)
+                          ? null
+                          : () => _pickAndUploadUsdz(model),
+                    ),
                     IconButton(
                       icon: const Icon(Icons.visibility_outlined),
                       tooltip: 'Preview & hotspots',

@@ -14,7 +14,10 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$ModelAsset {
 
- String get id; String get productId; String get filePath; String get format; int get version; int? get fileSizeBytes; String get status; bool get isDeleted; DateTime get createdAt; DateTime get updatedAt;
+ String get id; String get productId; String get filePath; String get format; int get version; int? get fileSizeBytes;// Optional USDZ variant for iOS Quick Look AR -- iOS can't AR-launch a
+// .glb/.gltf directly. Absent for most models; AR on iOS is simply not
+// offered when this is null, not an error.
+ String? get usdzFilePath; String get status; bool get isDeleted; DateTime get createdAt; DateTime get updatedAt;
 /// Create a copy of ModelAsset
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +28,16 @@ $ModelAssetCopyWith<ModelAsset> get copyWith => _$ModelAssetCopyWithImpl<ModelAs
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ModelAsset&&(identical(other.id, id) || other.id == id)&&(identical(other.productId, productId) || other.productId == productId)&&(identical(other.filePath, filePath) || other.filePath == filePath)&&(identical(other.format, format) || other.format == format)&&(identical(other.version, version) || other.version == version)&&(identical(other.fileSizeBytes, fileSizeBytes) || other.fileSizeBytes == fileSizeBytes)&&(identical(other.status, status) || other.status == status)&&(identical(other.isDeleted, isDeleted) || other.isDeleted == isDeleted)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ModelAsset&&(identical(other.id, id) || other.id == id)&&(identical(other.productId, productId) || other.productId == productId)&&(identical(other.filePath, filePath) || other.filePath == filePath)&&(identical(other.format, format) || other.format == format)&&(identical(other.version, version) || other.version == version)&&(identical(other.fileSizeBytes, fileSizeBytes) || other.fileSizeBytes == fileSizeBytes)&&(identical(other.usdzFilePath, usdzFilePath) || other.usdzFilePath == usdzFilePath)&&(identical(other.status, status) || other.status == status)&&(identical(other.isDeleted, isDeleted) || other.isDeleted == isDeleted)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,productId,filePath,format,version,fileSizeBytes,status,isDeleted,createdAt,updatedAt);
+int get hashCode => Object.hash(runtimeType,id,productId,filePath,format,version,fileSizeBytes,usdzFilePath,status,isDeleted,createdAt,updatedAt);
 
 @override
 String toString() {
-  return 'ModelAsset(id: $id, productId: $productId, filePath: $filePath, format: $format, version: $version, fileSizeBytes: $fileSizeBytes, status: $status, isDeleted: $isDeleted, createdAt: $createdAt, updatedAt: $updatedAt)';
+  return 'ModelAsset(id: $id, productId: $productId, filePath: $filePath, format: $format, version: $version, fileSizeBytes: $fileSizeBytes, usdzFilePath: $usdzFilePath, status: $status, isDeleted: $isDeleted, createdAt: $createdAt, updatedAt: $updatedAt)';
 }
 
 
@@ -45,7 +48,7 @@ abstract mixin class $ModelAssetCopyWith<$Res>  {
   factory $ModelAssetCopyWith(ModelAsset value, $Res Function(ModelAsset) _then) = _$ModelAssetCopyWithImpl;
 @useResult
 $Res call({
- String id, String productId, String filePath, String format, int version, int? fileSizeBytes, String status, bool isDeleted, DateTime createdAt, DateTime updatedAt
+ String id, String productId, String filePath, String format, int version, int? fileSizeBytes, String? usdzFilePath, String status, bool isDeleted, DateTime createdAt, DateTime updatedAt
 });
 
 
@@ -62,7 +65,7 @@ class _$ModelAssetCopyWithImpl<$Res>
 
 /// Create a copy of ModelAsset
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? productId = null,Object? filePath = null,Object? format = null,Object? version = null,Object? fileSizeBytes = freezed,Object? status = null,Object? isDeleted = null,Object? createdAt = null,Object? updatedAt = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? productId = null,Object? filePath = null,Object? format = null,Object? version = null,Object? fileSizeBytes = freezed,Object? usdzFilePath = freezed,Object? status = null,Object? isDeleted = null,Object? createdAt = null,Object? updatedAt = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,productId: null == productId ? _self.productId : productId // ignore: cast_nullable_to_non_nullable
@@ -70,7 +73,8 @@ as String,filePath: null == filePath ? _self.filePath : filePath // ignore: cast
 as String,format: null == format ? _self.format : format // ignore: cast_nullable_to_non_nullable
 as String,version: null == version ? _self.version : version // ignore: cast_nullable_to_non_nullable
 as int,fileSizeBytes: freezed == fileSizeBytes ? _self.fileSizeBytes : fileSizeBytes // ignore: cast_nullable_to_non_nullable
-as int?,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
+as int?,usdzFilePath: freezed == usdzFilePath ? _self.usdzFilePath : usdzFilePath // ignore: cast_nullable_to_non_nullable
+as String?,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as String,isDeleted: null == isDeleted ? _self.isDeleted : isDeleted // ignore: cast_nullable_to_non_nullable
 as bool,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as DateTime,updatedAt: null == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
@@ -159,10 +163,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String productId,  String filePath,  String format,  int version,  int? fileSizeBytes,  String status,  bool isDeleted,  DateTime createdAt,  DateTime updatedAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String productId,  String filePath,  String format,  int version,  int? fileSizeBytes,  String? usdzFilePath,  String status,  bool isDeleted,  DateTime createdAt,  DateTime updatedAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ModelAsset() when $default != null:
-return $default(_that.id,_that.productId,_that.filePath,_that.format,_that.version,_that.fileSizeBytes,_that.status,_that.isDeleted,_that.createdAt,_that.updatedAt);case _:
+return $default(_that.id,_that.productId,_that.filePath,_that.format,_that.version,_that.fileSizeBytes,_that.usdzFilePath,_that.status,_that.isDeleted,_that.createdAt,_that.updatedAt);case _:
   return orElse();
 
 }
@@ -180,10 +184,10 @@ return $default(_that.id,_that.productId,_that.filePath,_that.format,_that.versi
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String productId,  String filePath,  String format,  int version,  int? fileSizeBytes,  String status,  bool isDeleted,  DateTime createdAt,  DateTime updatedAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String productId,  String filePath,  String format,  int version,  int? fileSizeBytes,  String? usdzFilePath,  String status,  bool isDeleted,  DateTime createdAt,  DateTime updatedAt)  $default,) {final _that = this;
 switch (_that) {
 case _ModelAsset():
-return $default(_that.id,_that.productId,_that.filePath,_that.format,_that.version,_that.fileSizeBytes,_that.status,_that.isDeleted,_that.createdAt,_that.updatedAt);case _:
+return $default(_that.id,_that.productId,_that.filePath,_that.format,_that.version,_that.fileSizeBytes,_that.usdzFilePath,_that.status,_that.isDeleted,_that.createdAt,_that.updatedAt);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -200,10 +204,10 @@ return $default(_that.id,_that.productId,_that.filePath,_that.format,_that.versi
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String productId,  String filePath,  String format,  int version,  int? fileSizeBytes,  String status,  bool isDeleted,  DateTime createdAt,  DateTime updatedAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String productId,  String filePath,  String format,  int version,  int? fileSizeBytes,  String? usdzFilePath,  String status,  bool isDeleted,  DateTime createdAt,  DateTime updatedAt)?  $default,) {final _that = this;
 switch (_that) {
 case _ModelAsset() when $default != null:
-return $default(_that.id,_that.productId,_that.filePath,_that.format,_that.version,_that.fileSizeBytes,_that.status,_that.isDeleted,_that.createdAt,_that.updatedAt);case _:
+return $default(_that.id,_that.productId,_that.filePath,_that.format,_that.version,_that.fileSizeBytes,_that.usdzFilePath,_that.status,_that.isDeleted,_that.createdAt,_that.updatedAt);case _:
   return null;
 
 }
@@ -215,7 +219,7 @@ return $default(_that.id,_that.productId,_that.filePath,_that.format,_that.versi
 
 
 class _ModelAsset extends ModelAsset {
-  const _ModelAsset({required this.id, required this.productId, required this.filePath, required this.format, required this.version, this.fileSizeBytes, required this.status, required this.isDeleted, required this.createdAt, required this.updatedAt}): super._();
+  const _ModelAsset({required this.id, required this.productId, required this.filePath, required this.format, required this.version, this.fileSizeBytes, this.usdzFilePath, required this.status, required this.isDeleted, required this.createdAt, required this.updatedAt}): super._();
   
 
 @override final  String id;
@@ -224,6 +228,10 @@ class _ModelAsset extends ModelAsset {
 @override final  String format;
 @override final  int version;
 @override final  int? fileSizeBytes;
+// Optional USDZ variant for iOS Quick Look AR -- iOS can't AR-launch a
+// .glb/.gltf directly. Absent for most models; AR on iOS is simply not
+// offered when this is null, not an error.
+@override final  String? usdzFilePath;
 @override final  String status;
 @override final  bool isDeleted;
 @override final  DateTime createdAt;
@@ -239,16 +247,16 @@ _$ModelAssetCopyWith<_ModelAsset> get copyWith => __$ModelAssetCopyWithImpl<_Mod
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ModelAsset&&(identical(other.id, id) || other.id == id)&&(identical(other.productId, productId) || other.productId == productId)&&(identical(other.filePath, filePath) || other.filePath == filePath)&&(identical(other.format, format) || other.format == format)&&(identical(other.version, version) || other.version == version)&&(identical(other.fileSizeBytes, fileSizeBytes) || other.fileSizeBytes == fileSizeBytes)&&(identical(other.status, status) || other.status == status)&&(identical(other.isDeleted, isDeleted) || other.isDeleted == isDeleted)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ModelAsset&&(identical(other.id, id) || other.id == id)&&(identical(other.productId, productId) || other.productId == productId)&&(identical(other.filePath, filePath) || other.filePath == filePath)&&(identical(other.format, format) || other.format == format)&&(identical(other.version, version) || other.version == version)&&(identical(other.fileSizeBytes, fileSizeBytes) || other.fileSizeBytes == fileSizeBytes)&&(identical(other.usdzFilePath, usdzFilePath) || other.usdzFilePath == usdzFilePath)&&(identical(other.status, status) || other.status == status)&&(identical(other.isDeleted, isDeleted) || other.isDeleted == isDeleted)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,productId,filePath,format,version,fileSizeBytes,status,isDeleted,createdAt,updatedAt);
+int get hashCode => Object.hash(runtimeType,id,productId,filePath,format,version,fileSizeBytes,usdzFilePath,status,isDeleted,createdAt,updatedAt);
 
 @override
 String toString() {
-  return 'ModelAsset(id: $id, productId: $productId, filePath: $filePath, format: $format, version: $version, fileSizeBytes: $fileSizeBytes, status: $status, isDeleted: $isDeleted, createdAt: $createdAt, updatedAt: $updatedAt)';
+  return 'ModelAsset(id: $id, productId: $productId, filePath: $filePath, format: $format, version: $version, fileSizeBytes: $fileSizeBytes, usdzFilePath: $usdzFilePath, status: $status, isDeleted: $isDeleted, createdAt: $createdAt, updatedAt: $updatedAt)';
 }
 
 
@@ -259,7 +267,7 @@ abstract mixin class _$ModelAssetCopyWith<$Res> implements $ModelAssetCopyWith<$
   factory _$ModelAssetCopyWith(_ModelAsset value, $Res Function(_ModelAsset) _then) = __$ModelAssetCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String productId, String filePath, String format, int version, int? fileSizeBytes, String status, bool isDeleted, DateTime createdAt, DateTime updatedAt
+ String id, String productId, String filePath, String format, int version, int? fileSizeBytes, String? usdzFilePath, String status, bool isDeleted, DateTime createdAt, DateTime updatedAt
 });
 
 
@@ -276,7 +284,7 @@ class __$ModelAssetCopyWithImpl<$Res>
 
 /// Create a copy of ModelAsset
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? productId = null,Object? filePath = null,Object? format = null,Object? version = null,Object? fileSizeBytes = freezed,Object? status = null,Object? isDeleted = null,Object? createdAt = null,Object? updatedAt = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? productId = null,Object? filePath = null,Object? format = null,Object? version = null,Object? fileSizeBytes = freezed,Object? usdzFilePath = freezed,Object? status = null,Object? isDeleted = null,Object? createdAt = null,Object? updatedAt = null,}) {
   return _then(_ModelAsset(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,productId: null == productId ? _self.productId : productId // ignore: cast_nullable_to_non_nullable
@@ -284,7 +292,8 @@ as String,filePath: null == filePath ? _self.filePath : filePath // ignore: cast
 as String,format: null == format ? _self.format : format // ignore: cast_nullable_to_non_nullable
 as String,version: null == version ? _self.version : version // ignore: cast_nullable_to_non_nullable
 as int,fileSizeBytes: freezed == fileSizeBytes ? _self.fileSizeBytes : fileSizeBytes // ignore: cast_nullable_to_non_nullable
-as int?,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
+as int?,usdzFilePath: freezed == usdzFilePath ? _self.usdzFilePath : usdzFilePath // ignore: cast_nullable_to_non_nullable
+as String?,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as String,isDeleted: null == isDeleted ? _self.isDeleted : isDeleted // ignore: cast_nullable_to_non_nullable
 as bool,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as DateTime,updatedAt: null == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable

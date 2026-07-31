@@ -44,6 +44,13 @@ class FakeEmptyModelRepository implements ModelRepository {
 
   @override
   Future<Result<String>> getSignedUrl(String filePath) async => throw UnimplementedError();
+
+  @override
+  Future<Result<ModelAsset>> attachUsdz({
+    required ModelAsset model,
+    required String fileName,
+    required Uint8List bytes,
+  }) async => throw UnimplementedError();
 }
 
 class FakeEmptyHotspotRepository implements HotspotRepository {

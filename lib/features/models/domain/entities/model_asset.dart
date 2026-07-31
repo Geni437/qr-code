@@ -11,6 +11,10 @@ abstract class ModelAsset with _$ModelAsset {
     required String format,
     required int version,
     int? fileSizeBytes,
+    // Optional USDZ variant for iOS Quick Look AR -- iOS can't AR-launch a
+    // .glb/.gltf directly. Absent for most models; AR on iOS is simply not
+    // offered when this is null, not an error.
+    String? usdzFilePath,
     required String status,
     required bool isDeleted,
     required DateTime createdAt,
@@ -26,6 +30,7 @@ abstract class ModelAsset with _$ModelAsset {
     format: json['format'] as String,
     version: json['version'] as int,
     fileSizeBytes: json['file_size_bytes'] as int?,
+    usdzFilePath: json['usdz_file_path'] as String?,
     status: json['status'] as String,
     isDeleted: json['is_deleted'] as bool,
     createdAt: DateTime.parse(json['created_at'] as String),

@@ -26,6 +26,8 @@ class Model3DViewer extends StatelessWidget {
     this.hotspotRelatedCss = '',
     this.placementEnabled = false,
     this.onPlacement,
+    this.arEnabled = false,
+    this.iosSrc,
   });
 
   final String src;
@@ -35,6 +37,18 @@ class Model3DViewer extends StatelessWidget {
   final String hotspotRelatedCss;
   final bool placementEnabled;
   final PlacementCallback? onPlacement;
+
+  /// Turns on `model-viewer`'s own built-in AR launch button — it already
+  /// detects whether the current device/browser can actually do AR and
+  /// hides itself otherwise, so there's no separate Flutter-side "can this
+  /// device do AR" check here; that would just duplicate logic the
+  /// component already gets right.
+  final bool arEnabled;
+
+  /// Optional USDZ variant for iOS Quick Look AR. Without it, iOS simply
+  /// isn't offered the AR button — `model-viewer` handles the absence
+  /// gracefully, not as an error.
+  final String? iosSrc;
 
   static const _placementJs = '''
 (function () {
@@ -61,7 +75,7 @@ class Model3DViewer extends StatelessWidget {
     // input that should change what's rendered has to be part of the key,
     // forcing Flutter to tear down and recreate the element.
     final key = ValueKey(
-      Object.hash(controller.remountKey, placementEnabled, hotspotInnerHtml, src),
+      Object.hash(controller.remountKey, placementEnabled, hotspotInnerHtml, src, arEnabled, iosSrc),
     );
 
     return ListenableBuilder(
@@ -77,6 +91,9 @@ class Model3DViewer extends StatelessWidget {
           cameraOrbit: controller.cameraOrbit,
           animationName: controller.animationName,
           autoPlay: controller.isPlaying,
+          ar: arEnabled,
+          arModes: arEnabled ? const ['webxr', 'scene-viewer', 'quick-look'] : null,
+          iosSrc: iosSrc,
           innerModelViewerHtml: hotspotInnerHtml,
           relatedJs: relatedJs,
           relatedCss: hotspotRelatedCss,

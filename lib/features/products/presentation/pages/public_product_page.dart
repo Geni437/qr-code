@@ -151,8 +151,10 @@ class _ProductDetails extends ConsumerWidget {
 }
 
 /// Loads the product's published model (if any) and renders the shared
-/// viewer with its hotspots. AR launch stays disabled here — that's Phase
-/// 5, not pulled forward just because `model_viewer_plus` exposes it.
+/// viewer with its hotspots and AR enabled. `model-viewer` shows its own AR
+/// button only when the current device/browser can actually launch AR
+/// (Scene Viewer on Android, Quick Look on iOS with a USDZ variant, WebXR
+/// on Chrome for Android) — there's no separate Flutter-side button here.
 class _Product3DViewerSection extends ConsumerStatefulWidget {
   const _Product3DViewerSection({required this.productId});
 
@@ -166,6 +168,7 @@ class _Product3DViewerSectionState extends ConsumerState<_Product3DViewerSection
   final _controller = Model3DViewerController();
   bool _loading = true;
   String? _signedUrl;
+  String? _iosSrc;
   List<Hotspot> _hotspots = [];
   Map<String, ResolvedMedia> _mediaByHotspot = {};
 
@@ -197,9 +200,17 @@ class _Product3DViewerSectionState extends ConsumerState<_Product3DViewerSection
     final hotspots = hotspotsResult.match((_) => const <Hotspot>[], (list) => list);
     final mediaByHotspot = await resolveHotspotMedia(ref, widget.productId, hotspots);
 
+    String? iosSrc;
+    final usdzPath = model.usdzFilePath;
+    if (usdzPath != null) {
+      final usdzUrlResult = await ref.read(modelRepositoryProvider).getSignedUrl(usdzPath);
+      iosSrc = usdzUrlResult.match((_) => null, (url) => url);
+    }
+
     if (!mounted) return;
     setState(() {
       _signedUrl = urlResult.match((_) => null, (url) => url);
+      _iosSrc = iosSrc;
       _hotspots = hotspots;
       _mediaByHotspot = mediaByHotspot;
       _loading = false;
@@ -236,19 +247,12 @@ class _Product3DViewerSectionState extends ConsumerState<_Product3DViewerSection
             hotspotInnerHtml: html.innerHtml,
             hotspotRelatedJs: html.relatedJs,
             hotspotRelatedCss: html.relatedCss,
+            arEnabled: true,
+            iosSrc: _iosSrc,
           ),
         ),
         const SizedBox(height: 12),
         Model3DViewerControls(controller: _controller),
-        const SizedBox(height: 12),
-        Tooltip(
-          message: 'Coming soon',
-          child: FilledButton.icon(
-            onPressed: null,
-            icon: const Icon(Icons.view_in_ar_outlined),
-            label: const Text('Launch AR'),
-          ),
-        ),
       ],
     );
   }

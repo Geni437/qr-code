@@ -88,4 +88,28 @@ class ModelRepositoryImpl implements ModelRepository {
       return Left(ServerFailure(e.toString()));
     }
   }
+
+  @override
+  Future<Result<ModelAsset>> attachUsdz({
+    required ModelAsset model,
+    required String fileName,
+    required Uint8List bytes,
+  }) async {
+    try {
+      final path = '${model.productId}/${DateTime.now().microsecondsSinceEpoch}_$fileName';
+      await _client.storage
+          .from(AppConstants.modelsBucket)
+          .uploadBinary(path, bytes, fileOptions: const FileOptions(upsert: true));
+
+      final row = await _client
+          .from(SupabaseTables.models)
+          .update({'usdz_file_path': path, 'updated_by': _userId})
+          .eq('id', model.id)
+          .select()
+          .single();
+      return Right(ModelAsset.fromRow(row));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
 }
