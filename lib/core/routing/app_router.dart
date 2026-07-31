@@ -4,9 +4,14 @@ import 'package:go_router/go_router.dart';
 import '../../features/authentication/presentation/controllers/auth_providers.dart';
 import '../../features/authentication/presentation/pages/forgot_password_page.dart';
 import '../../features/authentication/presentation/pages/login_page.dart';
+import '../../features/categories/presentation/pages/category_form_page.dart';
+import '../../features/categories/presentation/pages/category_list_page.dart';
 import '../../features/dashboard/presentation/dashboard_page.dart';
+import '../../features/products/presentation/pages/product_form_page.dart';
+import '../../features/products/presentation/pages/product_list_page.dart';
 import '../../shared/presentation/product_view_placeholder_page.dart';
 import '../../shared/presentation/public_landing_page.dart';
+import '../widgets/admin_shell.dart';
 import 'go_router_refresh_stream.dart';
 
 const _adminAuthRoutes = {'/admin/login', '/admin/forgot-password'};
@@ -49,9 +54,40 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/admin/forgot-password',
         builder: (context, state) => const ForgotPasswordPage(),
       ),
-      GoRoute(
-        path: '/admin/dashboard',
-        builder: (context, state) => const DashboardPage(),
+      ShellRoute(
+        builder: (context, state, child) => AdminShell(child: child),
+        routes: [
+          GoRoute(
+            path: '/admin/dashboard',
+            builder: (context, state) => const DashboardPage(),
+          ),
+          GoRoute(
+            path: '/admin/products',
+            builder: (context, state) => const ProductListPage(),
+          ),
+          GoRoute(
+            path: '/admin/products/new',
+            builder: (context, state) => const ProductFormPage(),
+          ),
+          GoRoute(
+            path: '/admin/products/:id/edit',
+            builder: (context, state) =>
+                ProductFormPage(productId: state.pathParameters['id']!),
+          ),
+          GoRoute(
+            path: '/admin/categories',
+            builder: (context, state) => const CategoryListPage(),
+          ),
+          GoRoute(
+            path: '/admin/categories/new',
+            builder: (context, state) => const CategoryFormPage(),
+          ),
+          GoRoute(
+            path: '/admin/categories/:id/edit',
+            builder: (context, state) =>
+                CategoryFormPage(categoryId: state.pathParameters['id']!),
+          ),
+        ],
       ),
     ],
   );
