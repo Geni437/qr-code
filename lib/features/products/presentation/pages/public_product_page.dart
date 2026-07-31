@@ -5,6 +5,14 @@ import '../../../../core/constants/app_constants.dart';
 import '../../../../core/services/supabase_service.dart';
 import '../../../../core/widgets/loading_view.dart';
 import '../../../analytics/presentation/controllers/scan_providers.dart';
+import '../../../hotspots/domain/entities/hotspot.dart';
+import '../../../hotspots/presentation/controllers/hotspot_providers.dart';
+import '../../../models/presentation/controllers/model_providers.dart';
+import '../../../viewer/data/hotspot_html_builder.dart';
+import '../../../viewer/data/hotspot_media_resolver.dart';
+import '../../../viewer/presentation/widgets/model_3d_viewer.dart';
+import '../../../viewer/presentation/widgets/model_3d_viewer_controller.dart';
+import '../../../viewer/presentation/widgets/model_3d_viewer_controls.dart';
 import '../../domain/entities/product.dart';
 import '../controllers/product_providers.dart';
 
@@ -134,17 +142,114 @@ class _ProductDetails extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 24),
-            Tooltip(
-              message: 'Coming soon',
-              child: FilledButton.icon(
-                onPressed: null,
-                icon: const Icon(Icons.view_in_ar_outlined),
-                label: const Text('View in 3D / AR'),
-              ),
-            ),
+            _Product3DViewerSection(productId: product.id),
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Loads the product's published model (if any) and renders the shared
+/// viewer with its hotspots. AR launch stays disabled here — that's Phase
+/// 5, not pulled forward just because `model_viewer_plus` exposes it.
+class _Product3DViewerSection extends ConsumerStatefulWidget {
+  const _Product3DViewerSection({required this.productId});
+
+  final String productId;
+
+  @override
+  ConsumerState<_Product3DViewerSection> createState() => _Product3DViewerSectionState();
+}
+
+class _Product3DViewerSectionState extends ConsumerState<_Product3DViewerSection> {
+  final _controller = Model3DViewerController();
+  bool _loading = true;
+  String? _signedUrl;
+  List<Hotspot> _hotspots = [];
+  Map<String, ResolvedMedia> _mediaByHotspot = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Future<void> _load() async {
+    final modelsResult = await ref
+        .read(modelRepositoryProvider)
+        .listForProduct(widget.productId);
+    final models = modelsResult.match((_) => const [], (list) => list);
+    if (models.isEmpty) {
+      if (mounted) setState(() => _loading = false);
+      return;
+    }
+
+    final model = models.first;
+    final urlResult = await ref.read(modelRepositoryProvider).getSignedUrl(model.filePath);
+    final hotspotsResult = await ref.read(hotspotRepositoryProvider).listForModel(model.id);
+    final hotspots = hotspotsResult.match((_) => const <Hotspot>[], (list) => list);
+    final mediaByHotspot = await resolveHotspotMedia(ref, widget.productId, hotspots);
+
+    if (!mounted) return;
+    setState(() {
+      _signedUrl = urlResult.match((_) => null, (url) => url);
+      _hotspots = hotspots;
+      _mediaByHotspot = mediaByHotspot;
+      _loading = false;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_loading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_signedUrl == null) {
+      return Tooltip(
+        message: 'No 3D model available',
+        child: FilledButton.icon(
+          onPressed: null,
+          icon: const Icon(Icons.view_in_ar_outlined),
+          label: const Text('View in 3D / AR'),
+        ),
+      );
+    }
+
+    final html = buildHotspotHtml(_hotspots, mediaByHotspotId: _mediaByHotspot);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SizedBox(
+          height: 320,
+          child: Model3DViewer(
+            src: _signedUrl!,
+            controller: _controller,
+            hotspotInnerHtml: html.innerHtml,
+            hotspotRelatedJs: html.relatedJs,
+            hotspotRelatedCss: html.relatedCss,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Model3DViewerControls(controller: _controller),
+        const SizedBox(height: 12),
+        Tooltip(
+          message: 'Coming soon',
+          child: FilledButton.icon(
+            onPressed: null,
+            icon: const Icon(Icons.view_in_ar_outlined),
+            label: const Text('Launch AR'),
+          ),
+        ),
+      ],
     );
   }
 }

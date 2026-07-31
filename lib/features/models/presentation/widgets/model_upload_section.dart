@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../viewer/presentation/pages/model_preview_page.dart';
 import '../../domain/entities/model_asset.dart';
 import '../controllers/model_providers.dart';
 
@@ -112,12 +113,6 @@ class _ModelUploadSectionState extends ConsumerState<ModelUploadSection> {
             ),
           ],
         ),
-        const SizedBox(height: 8),
-        Text(
-          'In-app 3D preview arrives with the public viewer (Phase 4). For now, '
-          'use the signed link to preview a model externally.',
-          style: Theme.of(context).textTheme.bodySmall,
-        ),
         const SizedBox(height: 16),
         if (_error != null) Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
         if (_models == null)
@@ -137,6 +132,16 @@ class _ModelUploadSectionState extends ConsumerState<ModelUploadSection> {
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    IconButton(
+                      icon: const Icon(Icons.visibility_outlined),
+                      tooltip: 'Preview & hotspots',
+                      onPressed: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) =>
+                              ModelPreviewPage(productId: widget.productId, model: model),
+                        ),
+                      ),
+                    ),
                     IconButton(
                       icon: const Icon(Icons.link),
                       tooltip: 'Copy signed link',
