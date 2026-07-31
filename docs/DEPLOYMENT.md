@@ -33,6 +33,17 @@ the anon key is meant to be public, constrained by RLS, not secrecy — and
 `main.dart` skips the `.env` fetch entirely when dart-define config is
 present, so there's nothing left to 403 in the browser console either.
 
+**Path-based URLs are required for direct/deep links to work.**
+Flutter web defaults to hash-based routing (`/#/admin/login`), which only
+works when navigation happens *inside* the running app — a browser typing
+or QR-code-driven direct hit to a real path like `/admin/login` (no `#`)
+gets ignored entirely, and the app just boots to its default route.
+`lib/main.dart` calls `usePathUrlStrategy()` (from `flutter_web_plugins`,
+added as a dependency for this) to fix that. This is exactly why the
+`.htaccess` SPA-fallback rule below exists: with path-based routing, every
+client-side route is a "real" URL as far as Apache is concerned, so the
+server needs to be told to serve `index.html` for all of them.
+
 **The `--base-href` flag matters and must match `PUBLIC_BASE_URL`.**
 This project's `PUBLIC_BASE_URL` is `https://itclingua.info/qr-code` — a
 *subpath*, not the domain root. If you build without `--base-href

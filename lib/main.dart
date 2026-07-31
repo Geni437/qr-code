@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_web_plugins/flutter_web_plugins.dart';
 
 import 'core/config/supabase_config.dart';
 import 'core/constants/app_constants.dart';
@@ -10,6 +11,12 @@ import 'core/themes/app_theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // Flutter web defaults to hash-based URLs (#/admin/login) unless told
+  // otherwise — without this, every real path (typed directly, refreshed,
+  // or deep-linked from a QR code) just loads the app fresh at its
+  // default route, ignoring the actual browser path entirely. A no-op on
+  // non-web platforms.
+  usePathUrlStrategy();
   // Skip the .env HTTP fetch entirely when --dart-define config was
   // provided at build time — some production web hosts 403 any request
   // for a dotfile, so there's no reason to attempt (and log an error for)
