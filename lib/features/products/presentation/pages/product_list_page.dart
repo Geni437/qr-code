@@ -78,6 +78,7 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
                   width: 200,
                   child: DropdownButtonFormField<String?>(
                     initialValue: _categoryFilter,
+                    isExpanded: true,
                     decoration: const InputDecoration(labelText: 'Category'),
                     items: [
                       const DropdownMenuItem(value: null, child: Text('All categories')),
@@ -95,6 +96,7 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
                   width: 180,
                   child: DropdownButtonFormField<String?>(
                     initialValue: _statusFilter,
+                    isExpanded: true,
                     decoration: const InputDecoration(labelText: 'Status'),
                     items: const [
                       DropdownMenuItem(value: null, child: Text('All statuses')),

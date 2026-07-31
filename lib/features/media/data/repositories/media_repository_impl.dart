@@ -22,7 +22,7 @@ class MediaRepositoryImpl implements MediaRepository {
 
   /// Maps a file extension to the (media `type`, storage bucket) it belongs
   /// in — one bucket per media kind, matching the schema in
-  /// SUPABASE_SETUP.md.
+  /// docs/DATABASE_SCHEMA.md.
   (String type, String bucket) _classify(String? extension) {
     final ext = (extension ?? '').toLowerCase();
     if (_imageExtensions.contains(ext)) return ('image', AppConstants.imagesBucket);
