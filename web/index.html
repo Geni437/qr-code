@@ -31,6 +31,16 @@
 
   <title>qr_ar_platform</title>
   <link rel="manifest" href="manifest.json">
+
+  <!--
+    model_viewer_plus (used by the 3D/AR viewer feature) builds its
+    <model-viewer> markup itself but does not load the custom-element
+    library that implements it on web — that has to be loaded globally,
+    once, here. Relative (no leading slash) so it resolves against
+    <base href> above when served from a subpath. See the package's
+    README "web/index.html (Web only)" section.
+  -->
+  <script type="module" src="assets/packages/model_viewer_plus/assets/model-viewer.min.js" defer></script>
 </head>
 <body>
   <!--
